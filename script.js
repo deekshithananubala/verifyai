@@ -1,21 +1,54 @@
+// =========================
+// AI ANALYSIS
+// =========================
+
+async function getAIAnalysis(informationA, informationB) {
+
+  const response = await fetch("/.netlify/functions/analyze", {
+    method: "POST",
+
+    headers: {
+      "Content-Type": "application/json"
+    },
+
+    body: JSON.stringify({
+      informationA,
+      informationB
+    })
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.error || "AI analysis failed.");
+  }
+
+  return data.analysis;
+}
+
+
+// =========================
+// BUTTONS AND RESULT
+// =========================
+
 const button = document.querySelector("#checkButton");
 const resetButton = document.querySelector("#resetButton");
 const result = document.querySelector("#result");
 
 
-// -------------------------
+// =========================
 // NORMALIZE TEXT
-// -------------------------
+// =========================
 
 function normalize(value) {
   return value.trim().toLowerCase();
 }
 
 
-// -------------------------
+// =========================
 // FORMAT DATE
 // YYYY-MM-DD → DD-MM-YYYY
-// -------------------------
+// =========================
 
 function formatDate(date) {
 
@@ -29,9 +62,9 @@ function formatDate(date) {
 }
 
 
-// -------------------------
+// =========================
 // CALCULATE SIMILARITY
-// -------------------------
+// =========================
 
 function similarity(valueA, valueB) {
 
@@ -60,9 +93,9 @@ function similarity(valueA, valueB) {
 }
 
 
-// -------------------------
+// =========================
 // CHECK ONE FIELD
-// -------------------------
+// =========================
 
 function checkField(valueA, valueB) {
 
@@ -75,7 +108,6 @@ function checkField(valueA, valueB) {
       message: "Missing information",
       score: 0
     };
-
   }
 
 
@@ -131,9 +163,9 @@ function checkField(valueA, valueB) {
 }
 
 
-// -------------------------
+// =========================
 // CREATE RESULT CARD
-// -------------------------
+// =========================
 
 function createResultCard(field, check, valueA, valueB) {
 
@@ -159,7 +191,6 @@ function createResultCard(field, check, valueA, valueB) {
 
   }
 
-
   return `
     <div class="result-card">
 
@@ -182,18 +213,17 @@ function createResultCard(field, check, valueA, valueB) {
 }
 
 
-// -------------------------
+// =========================
 // CHECK CONSISTENCY
-// -------------------------
+// =========================
 
-button.addEventListener("click", function() {
+button.addEventListener("click", async function() {
 
   const nameA = document.querySelector("#nameA").value;
   const dobA = document.querySelector("#dobA").value;
   const emailA = document.querySelector("#emailA").value;
   const phoneA = document.querySelector("#phoneA").value;
   const addressA = document.querySelector("#addressA").value;
-
 
   const nameB = document.querySelector("#nameB").value;
   const dobB = document.querySelector("#dobB").value;
@@ -202,7 +232,9 @@ button.addEventListener("click", function() {
   const addressB = document.querySelector("#addressB").value;
 
 
-  // Check every field
+  // =========================
+  // CHECK EVERY FIELD
+  // =========================
 
   const nameCheck = checkField(nameA, nameB);
 
@@ -215,7 +247,9 @@ button.addEventListener("click", function() {
   const addressCheck = checkField(addressA, addressB);
 
 
-  // Store results
+  // =========================
+  // STORE RESULTS
+  // =========================
 
   const checks = [
     nameCheck,
@@ -226,7 +260,9 @@ button.addEventListener("click", function() {
   ];
 
 
-  // Calculate score
+  // =========================
+  // CALCULATE SCORE
+  // =========================
 
   let score = 0;
 
@@ -235,7 +271,53 @@ button.addEventListener("click", function() {
   });
 
 
-  // Result border
+  // =========================
+  // INFORMATION FOR AI
+  // =========================
+
+  const informationA = {
+    name: nameA,
+    dateOfBirth: dobA,
+    email: emailA,
+    phone: phoneA,
+    address: addressA
+  };
+
+  const informationB = {
+    name: nameB,
+    dateOfBirth: dobB,
+    email: emailB,
+    phone: phoneB,
+    address: addressB
+  };
+
+
+  // =========================
+  // GET AI ANALYSIS
+  // =========================
+
+  let aiAnalysis = "Analyzing information...";
+
+  try {
+
+    aiAnalysis = await getAIAnalysis(
+      informationA,
+      informationB
+    );
+
+  } catch (error) {
+
+    console.error(error);
+
+    aiAnalysis =
+      "AI analysis is currently unavailable.";
+
+  }
+
+
+  // =========================
+  // RESULT BORDER
+  // =========================
 
   if (score === 5) {
     result.style.border = "2px solid green";
@@ -244,7 +326,9 @@ button.addEventListener("click", function() {
   }
 
 
-  // Display results
+  // =========================
+  // DISPLAY RESULTS
+  // =========================
 
   result.innerHTML = `
 
@@ -308,14 +392,23 @@ button.addEventListener("click", function() {
 
     </div>
 
+
+    <div class="ai-analysis">
+
+      <h2>🤖 AI Analysis</h2>
+
+      <p>${aiAnalysis}</p>
+
+    </div>
+
   `;
 
 });
 
 
-// -------------------------
+// =========================
 // RESET
-// -------------------------
+// =========================
 
 resetButton.addEventListener("click", function() {
 
